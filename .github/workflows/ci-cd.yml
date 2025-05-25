@@ -11,12 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # 1. Login a Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 2. Build & Push to Docker Hub
       - name: Build & Push to Docker Hub
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USER }}/menu-docean:${{ github.sha }} .
@@ -24,10 +26,12 @@ jobs:
           docker tag ${{ secrets.DOCKERHUB_USER }}/menu-docean:${{ github.sha }} ${{ secrets.DOCKERHUB_USER }}/menu-docean:latest
           docker push ${{ secrets.DOCKERHUB_USER }}/menu-docean:latest
 
+      # 3. Login a DigitalOcean Container Registry (DOCR)
       - name: Log in to DOCR
         run: |
           echo "${{ secrets.DO_API_TOKEN }}" | docker login ${{ secrets.DO_REGISTRY }} --username do --password-stdin
 
+      # 4. Tag & Push to DOCR
       - name: Tag & Push to DOCR
         run: |
           docker tag ${{ secrets.DOCKERHUB_USER }}/menu-docean:${{ github.sha }} ${{ secrets.DO_REGISTRY }}/menu-docean:${{ github.sha }}
@@ -35,6 +39,7 @@ jobs:
           docker tag ${{ secrets.DOCKERHUB_USER }}/menu-docean:latest ${{ secrets.DO_REGISTRY }}/menu-docean:latest
           docker push ${{ secrets.DO_REGISTRY }}/menu-docean:latest
 
+      # 5. Instala doctl
       - name: Install doctl
         run: |
           FIXED_VERSION="v1.126.0"
@@ -45,9 +50,16 @@ jobs:
           tar -xzvf doctl.tar.gz
           sudo mv doctl /usr/local/bin
 
+      # 6. Autenticación doctl
       - name: Authenticate doctl
         run: doctl auth init -t ${{ secrets.DO_API_TOKEN }}
 
+      # 7. Despliega usando spec.yaml
       - name: Update App Platform
         run: |
-          doctl apps update ${{ secrets.DO_APP_ID }} --spec spec.yaml
+          if [[ -f ./spec.yaml ]]; then
+            doctl apps update ${{ secrets.DO_APP_ID }} --spec ./spec.yaml
+          else
+            echo "Error: spec.yaml file not found."
+            exit 1
+          fi
