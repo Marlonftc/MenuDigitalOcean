@@ -40,12 +40,21 @@ jobs:
           docker tag ${{ secrets.DOCKERHUB_USER }}/menu-docean:latest ${{ secrets.DO_REGISTRY }}/menu-docean:latest
           docker push ${{ secrets.DO_REGISTRY }}/menu-docean:latest
 
-      # 6. Despliegue en App Platform
+      # 6. Despliegue en App Platform (instalando doctl con manejo de errores)
       - name: Install doctl
         run: |
           LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/digitalocean/doctl/releases/latest | jq -r '.tag_name')
-          VERSION_NUMBER=${LATEST_VERSION#v}
-          curl -fsSL "https://github.com/digitalocean/doctl/releases/download/${LATEST_VERSION}/doctl_${VERSION_NUMBER}_linux_amd64.tar.gz" -o doctl.tar.gz
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "Failed to fetch the latest version of doctl"
+            exit 1
+          fi
+          DOWNLOAD_URL="https://github.com/digitalocean/doctl/releases/download/${LATEST_VERSION}/doctl_${LATEST_VERSION#v}_linux_amd64.tar.gz"
+          echo "Trying to download: $DOWNLOAD_URL"
+          curl -fsSL "$DOWNLOAD_URL" -o doctl.tar.gz
+          if [ $? -ne 0 ]; then
+            echo "Failed to download doctl binary"
+            exit 1
+          fi
           tar -xzvf doctl.tar.gz
           sudo mv doctl /usr/local/bin
 
