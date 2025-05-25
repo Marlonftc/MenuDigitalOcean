@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3. Build & Push a Docker Hub
+      # 3. Build & Push to Docker Hub
       - name: Build & Push to Docker Hub
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USER }}/menu-docean:${{ github.sha }} .
@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "${{ secrets.DO_API_TOKEN }}" | docker login ${{ secrets.DO_REGISTRY }} --username do --password-stdin
 
-      # 5. Tag & Push a DOCR
+      # 5. Tag & Push to DOCR
       - name: Tag & Push to DOCR
         run: |
           docker tag ${{ secrets.DOCKERHUB_USER }}/menu-docean:${{ github.sha }} ${{ secrets.DO_REGISTRY }}/menu-docean:${{ github.sha }}
@@ -43,7 +43,8 @@ jobs:
       # 6. Despliegue en App Platform
       - name: Install doctl
         run: |
-          curl -sL https://github.com/digitalocean/doctl/releases/latest/download/doctl-$(uname)-amd64.tar.gz | tar -xzv
+          curl -fsSL https://github.com/digitalocean/doctl/releases/latest/download/doctl-linux-amd64.tar.gz -o doctl.tar.gz
+          tar -xzvf doctl.tar.gz
           sudo mv doctl /usr/local/bin
 
       - name: Authenticate doctl
