@@ -50,4 +50,4 @@ jobs:
 
       - name: Update App Platform
         run: |
-          doctl apps update ${{ secrets.DO_APP_ID }}
+          doctl apps update ${{ secrets.DO_APP_ID }} --spec spec.yaml
