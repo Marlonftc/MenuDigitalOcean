@@ -43,7 +43,9 @@ jobs:
       # 6. Despliegue en App Platform
       - name: Install doctl
         run: |
-          curl -fsSL https://github.com/digitalocean/doctl/releases/latest/download/doctl-linux-amd64.tar.gz -o doctl.tar.gz
+          LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/digitalocean/doctl/releases/latest | jq -r '.tag_name')
+          VERSION_NUMBER=${LATEST_VERSION#v}
+          curl -fsSL "https://github.com/digitalocean/doctl/releases/download/${LATEST_VERSION}/doctl_${VERSION_NUMBER}_linux_amd64.tar.gz" -o doctl.tar.gz
           tar -xzvf doctl.tar.gz
           sudo mv doctl /usr/local/bin
 
